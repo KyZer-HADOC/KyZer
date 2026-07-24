@@ -6,7 +6,7 @@ cmd(
   {
     pattern: "song",
     react: "🎶",
-    desc: "Download Song",
+    desc: "Download Songs",
     category: "download",
     filename: __filename,
   },
@@ -47,7 +47,7 @@ cmd(
       const url = data.url;
 
       let desc = `
-Song downloader
+_Song downloader_
 🎬 *Title:* ${data.title}
 ⏱️ *Duration:* ${data.timestamp}
 📅 *Uploaded:* ${data.ago}
