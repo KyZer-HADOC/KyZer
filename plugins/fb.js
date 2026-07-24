@@ -6,7 +6,7 @@ cmd(
     pattern: "fb",
     alias: ["facebook"],
     react: "✅",
-    desc: "Download Facebook Video",
+    desc: "Download Facebook Videos",
     category: "download",
     filename: __filename,
   },
@@ -58,7 +58,7 @@ cmd(
       const qualityText = hd ? "HD" : "SD";
 
       const desc = `
-Your fb video
+_Your fb video_
 👻 *Title*: ${title || "Unknown"}
 👻 *Quality*: ${qualityText}
 `;
@@ -67,7 +67,7 @@ Your fb video
         from,
         {
           image: {
-            url: "https://github.com/DANUWA-MD/DANUWA-MD/blob/main/images/fbdownloader.png?raw=true",
+            url: "https://github.com/KyZer-HADOC/KyZer/blob/main/images/KyZer%20bot_%20gothic%20cyberpunk%20aesthetic.png?raw=true",
           },
           caption: desc,
         },
