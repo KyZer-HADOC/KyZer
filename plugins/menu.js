@@ -1,5 +1,6 @@
 const { cmd, commands } = require("../command");
-const config = require("../config"); // path ඔයාගේ project structure එකට අනුව adjust කරන්න
+const config = require('../config');
+ // path ඔයාගේ project structure එකට අනුව adjust කරන්න
 
 cmd(
   {
