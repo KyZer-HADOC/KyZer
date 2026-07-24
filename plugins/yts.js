@@ -6,7 +6,7 @@ cmd(
     pattern: "yts",
     alias: ["yts", "youtubesearch"],
     react: "🔎",
-    desc: "Search YouTube videos",
+    desc: "Searching YouTube videos",
     category: "search",
     filename: __filename,
   },
@@ -38,7 +38,7 @@ cmd(
       )).join("\n\n");
 
       const caption = `  
-Your youtube search results
+_Your youtube search results_
 ─────────────────────────
 🔎 *Query*: ${q}
 ${formattedResults}
@@ -48,7 +48,7 @@ ${formattedResults}
         from,
         {
           image: {
-            url: "https://github.com/DANUWA-MD/DANUWA-MD/blob/main/images/yts.png?raw=true",
+            url: "https://github.com/KyZer-HADOC/KyZer/blob/main/images/KyZer%20bot_%20gothic%20cyberpunk%20aesthetic.png?raw=true",
           },
           caption,
         },
