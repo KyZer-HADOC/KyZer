@@ -1,12 +1,12 @@
 {
-  "name": "DANUWA-MD",
+  "name": "KyZer-Fea",
   "version": "1.0.0",
-  "description": "A Powerfull Whatsapp Bot",
+  "description": "A Powerfull Whatsapp Bot-|Crafted by KyZer_HADOC",
   "main": "index.js",
   "scripts": {
-    "start": "pm2 start index.js --deep-monitoring --attach --name DANUWA-MD",
-    "stop": "pm2 stop DANUWA-MD",
-    "restart": "pm2 restart DANUWA-MD"
+    "start": "pm2 start index.js --deep-monitoring --attach --name KyZer-Fea",
+    "stop": "pm2 stop KyZer-Fea",
+    "restart": "pm2 restart KyZer-Fea"
   },
   "dependencies": {
     "@whiskeysockets/baileys": "^6.7.16",
