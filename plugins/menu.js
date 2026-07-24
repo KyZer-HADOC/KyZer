@@ -1,4 +1,5 @@
 const { cmd, commands } = require("../command");
+const config = require("../config"); // path ඔයාගේ project structure එකට අනුව adjust කරන්න
 
 cmd(
   {
@@ -18,7 +19,6 @@ cmd(
   ) => {
     try {
       const categories = {};
-
       for (let cmdName in commands) {
         const cmdData = commands[cmdName];
         const cat = cmdData.category?.toLowerCase() || "other";
@@ -28,9 +28,7 @@ cmd(
           desc: cmdData.desc || "No description"
         });
       }
-
       let menuText = "📋 *Available Commands:*\n";
-
       for (const [cat, cmds] of Object.entries(categories)) {
         menuText += `\n📂 *${cat.toUpperCase()}*\n`;
         cmds.forEach(c => {
@@ -38,7 +36,16 @@ cmd(
         });
       }
 
-      await reply(menuText.trim());
+      // Image එකක් සමඟ menu එක යවනවා
+      await danuwa.sendMessage(
+        from,
+        {
+          image: { url: config.ALIVE_IMG }, // config.js එකේ alive image variable name එක මෙතන දාන්න
+          caption: menuText.trim()
+        },
+        { quoted: mek }
+      );
+
     } catch (err) {
       console.error(err);
       reply("❌ Error generating menu.");
