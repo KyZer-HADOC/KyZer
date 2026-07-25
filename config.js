@@ -10,6 +10,7 @@ ALIVE_IMG: process.env.ALIVE_IMG || "https://github.com/KyZer-HADOC/KyZer/blob/m
 ALIVE_MSG: process.env.ALIVE_MSG || "*Hello👋 KyZer-Fea Is Alive Now😍*",
 BOT_OWNER: '94716252002',  // Replace with the owner's phone number
 AUTO_STATUS_SEEN: 'true',
+AUTO_STATUS_REACT: 'true',
 
 
 
