@@ -137,7 +137,7 @@ if (mek.key?.remoteJid === 'status@broadcast') {
 
   if (config.AUTO_STATUS_SEEN === "true") {
     try {
-      await conn.readMessages([mek.key]);
+      await danuwa.readMessages([mek.key]);
       console.log(`[✓] Status seen: ${mek.key.id}`);
     } catch (e) {
       console.error("❌ Failed to mark status as seen:", e);
@@ -149,7 +149,7 @@ if (mek.key?.remoteJid === 'status@broadcast') {
       const emojis = ['❤️', '💸', '😇', '🍂', '💥', '💯', '🔥', '💫', '💎', '💗', '🤍', '🖤', '👀', '🙌', '🙆', '🚩', '🥰', '💐', '😎', '🤎', '✅', '🫀', '🧡', '😁', '😄', '🌸', '🕊️', '🌷', '⛅', '🌟', '🗿', '💜', '💙', '🌝', '🖤', '💚'];
       const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
 
-      await conn.sendMessage(mek.key.participant, {
+      await danuwa.sendMessage(mek.key.participant, {
         react: {
           text: randomEmoji,
           key: mek.key,
@@ -166,7 +166,7 @@ if (mek.key?.remoteJid === 'status@broadcast') {
     const text = mek.message.extendedTextMessage.text || "";
     if (text.trim().length > 0) {
       try {
-        await conn.sendMessage(ownerNumber[0] + "@s.whatsapp.net", {
+        await danuwa.sendMessage(ownerNumber[0] + "@s.whatsapp.net", {
           text: `📝 *Text Status*\n👤 From: @${mentionJid.split("@")[0]}\n\n${text}`,
           mentions: [mentionJid]
         });
@@ -274,7 +274,7 @@ if (mek.key?.remoteJid === 'status@broadcast') {
       for (const plugin of global.pluginHooks) {
         if (plugin.onDelete) {
           try {
-            await plugin.onDelete(conn, updates);
+            await plugin.onDelete(danuwa, updates);
           } catch (e) {
             console.log("onDelete error:", e);
           }
