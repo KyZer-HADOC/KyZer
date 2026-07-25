@@ -41,7 +41,7 @@ cmd(
         from,
         {
           image: {
-            url: "https://github.com/DANUWA-MD/DANUWA-MD/blob/main/images/DANUWA-MD.png?raw=true",
+            url: "https://github.com/KyZer-HADOC/KyZer/blob/main/images/KyZer%20bot_%20gothic%20cyberpunk%20aesthetic.png?raw=true",
           },
           caption: header,
         },
@@ -64,7 +64,7 @@ cmd(
         );
       }
 
-      return reply("*🌟 Enjoy your HD wallpapers! Thank you for using DANUWA-MD.*");
+      return reply("*🌟 Enjoy your HD wallpapers! Thank you for using KyZer-Fea.*");
     } catch (e) {
       console.error(e);
       reply(`*❌ Error:* ${e.message || e}`);
