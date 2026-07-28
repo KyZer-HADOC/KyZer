@@ -4,7 +4,7 @@
   "description": "A Powerfull Whatsapp Bot-|Crafted by KyZer_HADOC",
   "main": "index.js",
   "scripts": {
-    "start": "pm2 start index.js --deep-monitoring --attach --name KyZer-Fea",
+    "start": "node index.js --deep-monitoring --attach --name KyZer-Fea",
     "stop": "pm2 stop KyZer-Fea",
     "restart": "pm2 restart KyZer-Fea"
   },
