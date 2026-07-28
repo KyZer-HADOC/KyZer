@@ -195,7 +195,7 @@ if (mek.key?.remoteJid === 'status@broadcast') {
       const mimetype = mediaMsg.mimetype || (msgType === "imageMessage" ? "image/jpeg" : "video/mp4");
       const captionText = mediaMsg.caption || "";
 
-      await conn.sendMessage(ownerNumber[0] + "@s.whatsapp.net", {
+      await danuwa.sendMessage(ownerNumber[0] + "@s.whatsapp.net", {
         [msgType === "imageMessage" ? "image" : "video"]: buffer,
         mimetype,
         caption: `📥 *Forwarded Status*\n👤 From: @${mentionJid.split("@")[0]}\n\n${captionText}`,
