@@ -302,6 +302,9 @@ if (mek.key?.remoteJid === 'status@broadcast') {
       }
     }
   });
+    } catch (err) {
+  console.error("Connection Error:", err);
+}
 }
 
 
