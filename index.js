@@ -110,29 +110,32 @@ async function connectToWA() {
     // ⬇️ මෙතනින් පහලට ඔයාගේ කලින් code එක එනව
 
   danuwa.ev.on('connection.update', async (update) => {
-    const { connection, lastDisconnect } = update;
-    if (connection === 'close') {
-  if (lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut) {
-    connectToWA();
-  }
-} else if (connection === 'open') {
-      }
-    } else if (connection === 'open') {
-      console.log('✅ KyZer-Fea connected to WhatsApp');
+  console.log("UPDATE:", update);
 
-      const up = `KyZer-Fea connected ✅\n\nPREFIX: ${prefix}`;
-      await danuwa.sendMessage(ownerNumber[0] + "@s.whatsapp.net", {
-        image: { url: `https://github.com/KyZer-HADOC/KyZer/blob/main/images/KyZer%20bot_%20gothic%20cyberpunk%20aesthetic.png?raw=true` },
-        caption: up
-      });
+  const { connection, lastDisconnect } = update;
 
-      fs.readdirSync("./plugins/").forEach((plugin) => {
-        if (path.extname(plugin).toLowerCase() === ".js") {
-          require(`./plugins/${plugin}`);
-        }
-      });
+  if (connection === 'close') {
+    if (lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut) {
+      connectToWA();
     }
-  });
+  } else if (connection === 'open') {
+    console.log('✅ KyZer-Fea connected to WhatsApp');
+
+    const up = `KyZer-Fea connected ✅\n\nPREFIX: ${prefix}`;
+    await danuwa.sendMessage(ownerNumber[0] + "@s.whatsapp.net", {
+      image: {
+        url: "https://github.com/KyZer-HADOC/KyZer/blob/main/images/KyZer%20bot_%20gothic%20cyberpunk%20aesthetic.png?raw=true"
+      },
+      caption: up
+    });
+
+    fs.readdirSync("./plugins/").forEach((plugin) => {
+      if (path.extname(plugin).toLowerCase() === ".js") {
+        require(`./plugins/${plugin}`);
+      }
+    });
+  }
+});
 
   danuwa.ev.on('creds.update', saveCreds);
 
