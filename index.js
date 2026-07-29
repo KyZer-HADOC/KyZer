@@ -107,16 +107,7 @@ async function connectToWA() {
       console.log("UPDATE:", update);
     });
 
-    // ⬇️ මෙතනින් පහලට ඔයාගේ කලින් code එක එනවා
-    logger: P({ level: 'silent' }),
-    printQRInTerminal: false,
-    browser: Browsers.macOS("Firefox"),
-    auth: state,
-    version,
-    syncFullHistory: true,
-    markOnlineOnConnect: true,
-    generateHighQualityLinkPreview: true,
-  });
+    // ⬇️ මෙතනින් පහලට ඔයාගේ කලින් code එක එනව
 
   danuwa.ev.on('connection.update', async (update) => {
     const { connection, lastDisconnect } = update;
