@@ -112,11 +112,10 @@ async function connectToWA() {
   danuwa.ev.on('connection.update', async (update) => {
     const { connection, lastDisconnect } = update;
     if (connection === 'close') {
-      if (lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut) {
-        connectToWA();
-   } catch (err) {
-  console.error("❌ connectToWA Error:", err);
-}
+  if (lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut) {
+    connectToWA();
+  }
+} else if (connection === 'open') {
       }
     } else if (connection === 'open') {
       console.log('✅ KyZer-Fea connected to WhatsApp');
