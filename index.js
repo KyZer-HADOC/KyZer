@@ -79,11 +79,35 @@ global.pluginHooks = global.pluginHooks || [];
 global.pluginHooks.push(antiDeletePlugin);
 
 async function connectToWA() {
-  console.log("Connecting KyZer-Fea 🧬...");
-  const { state, saveCreds } = await useMultiFileAuthState(path.join(__dirname, '/auth_info_baileys/'));
-  const { version } = await fetchLatestBaileysVersion();
+  try {
+    console.log("STEP 1 - connectToWA started");
 
-  const danuwa = makeWASocket({
+    const { state, saveCreds } = await useMultiFileAuthState(
+      path.join(__dirname, '/auth_info_baileys/')
+    );
+    console.log("STEP 2 - Auth loaded");
+
+    const { version } = await fetchLatestBaileysVersion();
+    console.log("STEP 3 - Baileys version:", version);
+
+    const danuwa = makeWASocket({
+      logger: P({ level: 'silent' }),
+      printQRInTerminal: false,
+      browser: Browsers.macOS("Firefox"),
+      auth: state,
+      version,
+      syncFullHistory: true,
+      markOnlineOnConnect: true,
+      generateHighQualityLinkPreview: true,
+    });
+
+    console.log("STEP 4 - Socket created");
+
+    danuwa.ev.on("connection.update", (update) => {
+      console.log("UPDATE:", update);
+    });
+
+    // ⬇️ මෙතනින් පහලට ඔයාගේ කලින් code එක එනවා
     logger: P({ level: 'silent' }),
     printQRInTerminal: false,
     browser: Browsers.macOS("Firefox"),
@@ -99,6 +123,9 @@ async function connectToWA() {
     if (connection === 'close') {
       if (lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut) {
         connectToWA();
+   } catch (err) {
+  console.error("❌ connectToWA Error:", err);
+}
       }
     } else if (connection === 'open') {
       console.log('✅ KyZer-Fea connected to WhatsApp');
