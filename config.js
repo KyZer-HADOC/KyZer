@@ -5,7 +5,7 @@ function convertToBool(text, fault = 'true') {
     return text === fault ? true : false;
 }
 module.exports = {
-SESSION_ID: process.env.SESSION_ID || "",
+SESSION_ID: process.env.SESSION_ID || "eiIHibbI#hYXcgYa-23IAWZCHNUWwwm6vboKJSfdsE7Hpfeyr4xc",
 ALIVE_IMG: process.env.ALIVE_IMG || "https://github.com/KyZer-HADOC/KyZer/blob/main/images/KyZer%20bot_%20gothic%20cyberpunk%20aesthetic.png?raw=true",
 ALIVE_MSG: process.env.ALIVE_MSG || "*Hello👋 KyZer-Fea Is Alive Now😍*",
 BOT_OWNER: '94718354800',  // Replace with the owner's phone number
