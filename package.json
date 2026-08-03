@@ -9,7 +9,7 @@
     "restart": "pm2 restart KyZer-Fea"
   },
   "dependencies": {
-    "@whiskeysockets/baileys": "^7.0.0-rc13",
+    "@whiskeysockets/baileys": "^7.0.0-rc14",
     "api-dylux": "^1.8.5",
     "axios": "^1.18.1",
     "browser-id3-writer": "^6.3.2",
