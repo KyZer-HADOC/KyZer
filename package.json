@@ -1,14 +1,14 @@
 {
   "name": "KyZer-Fea",
-  "version": "1.1.0",
-  "description": "A WhatsApp bot crafted by KyZer_HADOC",
+  "version": "1.2.0",
+  "description": "KyZer-Fea WhatsApp bot and integrated Pair Code / QR web panel",
   "main": "index.js",
   "engines": {
     "node": ">=20.0.0"
   },
   "scripts": {
     "start": "node index.js",
-    "check": "node --check index.js && node --check command.js && node --check config.js && node --check lib/msg.js"
+    "check": "node --check index.js && node --check command.js && node --check config.js && node --check lib/msg.js && node --check web-pair/pair.js && node --check web-pair/qr.js && node --check web-pair/mega.js"
   },
   "dependencies": {
     "@whiskeysockets/baileys": "7.0.0-rc14",
@@ -38,6 +38,9 @@
     "util": "^0.12.5",
     "vm": "^0.1.0",
     "yt-search": "^2.13.1",
-    "puppeteer": "25.18.1"
+    "puppeteer": "25.18.1",
+    "awesome-phonenumber": "7.2.0",
+    "express-rate-limit": "8.7.5",
+    "qrcode": "1.5.4"
   }
 }
