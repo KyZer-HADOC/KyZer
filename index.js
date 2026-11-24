@@ -10,7 +10,6 @@ const { sms, downloadMediaMessage } = require('./lib/msg');
 const {
   getBuffer, getGroupAdmins, getRandom, h2k, isUrl, Json, runtime, sleep, fetchJson
 } = require('./lib/functions');
-const { File } = require('megajs');
 const { commands, replyHandlers } = require('./command');
 
 const app = express();
@@ -66,38 +65,89 @@ function restoreSessionBundle(data) {
   }
 }
 
+async function restoreLatestSessionAndConnect() {
+  if (isWhatsAppConnected) {
+    console.log("✅ WhatsApp bot is already connected.");
+    return true;
+  }
+
+  const { downloadLatestSessionBundle } = await import("./web-pair/mega.js");
+  const bundle = await downloadLatestSessionBundle();
+
+  if (!bundle) {
+    console.warn("⚠️ No saved session found in MEGA yet. Open the Pair Code page to link WhatsApp.");
+    return false;
+  }
+
+  if (fs.existsSync(authDir)) {
+    fs.rmSync(authDir, { recursive: true, force: true });
+  }
+
+  restoreSessionBundle(bundle);
+  console.log("✅ Latest WhatsApp session restored from MEGA.");
+  await connectToWA();
+  return true;
+}
+
 async function ensureSessionFile() {
   if (fs.existsSync(credsPath)) {
-    console.log("✅ Existing WhatsApp session found.");
+    console.log("✅ Local WhatsApp session found.");
     setTimeout(() => connectToWA(), 1000);
     return;
   }
 
-  if (!config.SESSION_ID) {
-    console.warn("⚠️ SESSION_ID is not configured. HTTP health endpoint will stay online; WhatsApp bot is offline until SESSION_ID is added.");
+  if (!process.env.MEGA_EMAIL || !process.env.MEGA_PASSWORD) {
+    console.warn("⚠️ MEGA_EMAIL / MEGA_PASSWORD are missing. Bot will remain offline until the MEGA session store is configured.");
     return;
   }
 
-  console.log("🔄 Downloading WhatsApp session bundle from MEGA...");
   try {
-    const filer = File.fromURL(`https://mega.nz/file/${config.SESSION_ID}`);
-    filer.download((err, data) => {
-      if (err) {
-        console.error("❌ Failed to download WhatsApp session from MEGA:", err.message || err);
-        return;
-      }
-
-      try {
-        restoreSessionBundle(data);
-        console.log("✅ WhatsApp session restored.");
-        setTimeout(() => connectToWA(), 1000);
-      } catch (restoreError) {
-        console.error("❌ Invalid WhatsApp session bundle:", restoreError.message);
-      }
-    });
+    await restoreLatestSessionAndConnect();
   } catch (error) {
-    console.error("❌ Could not start MEGA session download:", error.message || error);
+    console.error("❌ Could not restore the latest MEGA session:", error.message || error);
   }
+}
+
+global.activateLatestSession = restoreLatestSessionAndConnect;
+
+let sessionBackupTimer = null;
+let sessionBackupInterval = null;
+let sessionBackupInProgress = null;
+
+async function backupSessionToMega() {
+  if (!isWhatsAppConnected || !fs.existsSync(credsPath)) return;
+  if (sessionBackupInProgress) return sessionBackupInProgress;
+
+  sessionBackupInProgress = (async () => {
+    const { uploadSessionFolder } = await import("./web-pair/mega.js");
+    await uploadSessionFolder(authDir, `session-${Date.now()}.json`);
+    console.log("✅ WhatsApp auth snapshot saved to MEGA.");
+  })();
+
+  try {
+    await sessionBackupInProgress;
+  } finally {
+    sessionBackupInProgress = null;
+  }
+}
+
+function scheduleSessionBackup() {
+  if (sessionBackupTimer) clearTimeout(sessionBackupTimer);
+  sessionBackupTimer = setTimeout(() => {
+    backupSessionToMega().catch((error) => {
+      console.error("⚠️ Automatic MEGA session backup failed:", error.message || error);
+    });
+  }, 10000);
+}
+
+function startSessionBackupInterval() {
+  if (sessionBackupInterval) clearInterval(sessionBackupInterval);
+  sessionBackupInterval = setInterval(() => {
+    backupSessionToMega().catch((error) => {
+      console.error("⚠️ Scheduled MEGA session backup failed:", error.message || error);
+    });
+  }, 10 * 60 * 1000);
+  sessionBackupInterval.unref?.();
 }
 
 const antiDeletePlugin = require('./plugins/antidelete.js');
@@ -184,6 +234,8 @@ async function connectToWA() {
     isWhatsAppConnected = true;
     reconnectAttempts = 0;
     console.log('✅ KyZer-Fea connected to WhatsApp');
+    startSessionBackupInterval();
+    scheduleSessionBackup();
 
     const up = `KyZer-Fea connected ✅\n\nPREFIX: ${prefix}`;
     await danuwa.sendMessage(ownerNumber[0] + "@s.whatsapp.net", {
@@ -201,7 +253,14 @@ async function connectToWA() {
   }
 });
 
-  danuwa.ev.on('creds.update', saveCreds);
+  danuwa.ev.on('creds.update', async () => {
+    try {
+      await saveCreds();
+      scheduleSessionBackup();
+    } catch (error) {
+      console.error("Failed to persist WhatsApp credentials:", error);
+    }
+  });
 
   danuwa.ev.on('messages.upsert', async ({ messages }) => {
     for (const msg of messages) {
@@ -345,19 +404,50 @@ process.on('unhandledRejection', (reason) => {
 
 
 
-app.get("/", (_req, res) => {
-  res.status(200).send("Hey, KyZer-Fea is Back✅");
-});
+async function startHttpServer() {
+  app.set("trust proxy", 1);
 
-app.get("/health", (_req, res) => {
-  res.status(200).json({
-    status: "ok",
-    service: "KyZer-Fea",
-    whatsappConnected: isWhatsAppConnected,
+  const [{ default: pairRouter }, { default: qrRouter }, { rateLimit }] = await Promise.all([
+    import("./web-pair/pair.js"),
+    import("./web-pair/qr.js"),
+    import("express-rate-limit"),
+  ]);
+
+  const pairingLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 5,
+    standardHeaders: "draft-8",
+    legacyHeaders: false,
+    message: { error: "Too many pairing attempts. Please try again later." },
   });
-});
 
-app.listen(port, "0.0.0.0", () => {
-  console.log(`KyZer-Fea health server listening on port ${port}`);
-  ensureSessionFile();
+  app.get("/", (_req, res) => {
+    res.sendFile(path.join(__dirname, "web-pair", "pair.html"));
+  });
+
+  app.get("/bot", (_req, res) => {
+    res.status(200).send("Hey, KyZer-Fea is running ✅");
+  });
+
+  app.get("/health", (_req, res) => {
+    res.status(200).json({
+      status: "ok",
+      service: "KyZer-Fea",
+      whatsappConnected: isWhatsAppConnected,
+      uptimeSeconds: Math.floor(process.uptime()),
+    });
+  });
+
+  app.use("/pair", pairingLimiter, pairRouter);
+  app.use("/qr", pairingLimiter, qrRouter);
+
+  app.listen(port, "0.0.0.0", () => {
+    console.log(`KyZer-Fea + Web Pair listening on port ${port}`);
+    ensureSessionFile();
+  });
+}
+
+startHttpServer().catch((error) => {
+  console.error("Failed to start HTTP server:", error);
+  process.exitCode = 1;
 });
