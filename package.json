@@ -8,7 +8,7 @@
   },
   "scripts": {
     "start": "node index.js",
-    "check": "node --check index.js && node --check command.js && node --check config.js"
+    "check": "node --check index.js && node --check command.js && node --check config.js && node --check lib/msg.js"
   },
   "dependencies": {
     "@whiskeysockets/baileys": "7.0.0-rc14",
