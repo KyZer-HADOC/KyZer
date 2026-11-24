@@ -1,6 +1,5 @@
 const fs = require('fs');
 const path = require('path');
-const { downloadContentFromMessage } = require('@whiskeysockets/baileys');
 
 const tempFolder = path.join(__dirname, '../temp');
 if (!fs.existsSync(tempFolder)) {
@@ -77,6 +76,7 @@ module.exports = {
     if (!mediaTypes.includes(type)) return;
 
     try {
+      const { downloadContentFromMessage } = await import('@whiskeysockets/baileys');
       const stream = await downloadContentFromMessage(
         cleanMessage[type],
         type.replace('Message', '')
