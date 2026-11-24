@@ -1,25 +1,3 @@
-const {
-  default: makeWASocket,
-  useMultiFileAuthState,
-  DisconnectReason,
-  jidNormalizedUser,
-  getContentType,
-  proto,
-  generateWAMessageContent,
-  generateWAMessage,
-  AnyMessageContent,
-  prepareWAMessageMedia,
-  areJidsSameUser,
-  downloadContentFromMessage,
-  MessageRetryMap,
-  generateForwardMessageContent,
-  generateWAMessageFromContent,
-  generateMessageID, makeInMemoryStore,
-  jidDecode,
-  fetchLatestBaileysVersion,
-  Browsers
-} = require('@whiskeysockets/baileys');
-
 const fs = require('fs');
 const P = require('pino');
 const express = require('express');
@@ -39,38 +17,86 @@ const app = express();
 const port = process.env.PORT || 8000;
 
 const prefix = '#';
-const ownerNumber = ['94718354800'];
-const credsPath = path.join(__dirname, '/auth_info_baileys/creds.json');
+const ownerNumber = String(config.BOT_OWNER || '').split(',').map((value) => value.trim()).filter(Boolean);
+const authDir = path.join(__dirname, 'auth_info_baileys');
+const credsPath = path.join(authDir, 'creds.json');
+let isWhatsAppConnected = false;
+
+function restoreSessionBundle(data) {
+  let bundle;
+  try {
+    bundle = JSON.parse(Buffer.from(data).toString('utf8'));
+  } catch {
+    // Backward compatibility with the older pair service, which uploaded creds.json only.
+    fs.mkdirSync(authDir, { recursive: true });
+    fs.writeFileSync(credsPath, data, { mode: 0o600 });
+    return;
+  }
+
+  if (
+    bundle?.format !== 'kyzer-baileys-multifile-session' ||
+    bundle?.version !== 1 ||
+    !bundle.files ||
+    typeof bundle.files !== 'object'
+  ) {
+    // A legacy MEGA file may contain a plain Baileys creds.json JSON object.
+    fs.mkdirSync(authDir, { recursive: true });
+    fs.writeFileSync(credsPath, data, { mode: 0o600 });
+    return;
+  }
+
+  fs.mkdirSync(authDir, { recursive: true });
+  for (const [name, base64Content] of Object.entries(bundle.files)) {
+    if (
+      path.basename(name) !== name ||
+      !/^[a-zA-Z0-9._-]+\.json$/.test(name) ||
+      typeof base64Content !== 'string'
+    ) {
+      throw new Error('Invalid file entry in the MEGA session bundle.');
+    }
+    fs.writeFileSync(
+      path.join(authDir, name),
+      Buffer.from(base64Content, 'base64'),
+      { mode: 0o600 },
+    );
+  }
+
+  if (!fs.existsSync(credsPath)) {
+    throw new Error('The MEGA session bundle does not contain creds.json.');
+  }
+}
 
 async function ensureSessionFile() {
-  if (!fs.existsSync(credsPath)) {
-    if (!config.SESSION_ID) {
-      console.error('❌ SESSION_ID env variable is missing. Cannot restore session.');
-      process.exit(1);
-    }
+  if (fs.existsSync(credsPath)) {
+    console.log("✅ Existing WhatsApp session found.");
+    setTimeout(() => connectToWA(), 1000);
+    return;
+  }
 
-    console.log("🔄 creds.json not found. Downloading session from MEGA...");
+  if (!config.SESSION_ID) {
+    console.warn("⚠️ SESSION_ID is not configured. HTTP health endpoint will stay online; WhatsApp bot is offline until SESSION_ID is added.");
+    return;
+  }
 
-    const sessdata = config.SESSION_ID;
-    const filer = File.fromURL(`https://mega.nz/file/${sessdata}`);
-
+  console.log("🔄 Downloading WhatsApp session bundle from MEGA...");
+  try {
+    const filer = File.fromURL(`https://mega.nz/file/${config.SESSION_ID}`);
     filer.download((err, data) => {
       if (err) {
-        console.error("❌ Failed to download session file from MEGA:", err);
-        process.exit(1);
+        console.error("❌ Failed to download WhatsApp session from MEGA:", err.message || err);
+        return;
       }
 
-      fs.mkdirSync(path.join(__dirname, '/auth_info_baileys/'), { recursive: true });
-      fs.writeFileSync(credsPath, data);
-      console.log("✅ Session downloaded and saved. Restarting bot...");
-      setTimeout(() => {
-        connectToWA();
-      }, 2000);
+      try {
+        restoreSessionBundle(data);
+        console.log("✅ WhatsApp session restored.");
+        setTimeout(() => connectToWA(), 1000);
+      } catch (restoreError) {
+        console.error("❌ Invalid WhatsApp session bundle:", restoreError.message);
+      }
     });
-  } else {
-    setTimeout(() => {
-      connectToWA();
-    }, 1000);
+  } catch (error) {
+    console.error("❌ Could not start MEGA session download:", error.message || error);
   }
 }
 
@@ -89,6 +115,16 @@ async function connectToWA() {
   }
   isConnecting = true;
   try {
+    const {
+      default: makeWASocket,
+      useMultiFileAuthState,
+      DisconnectReason,
+      jidNormalizedUser,
+      getContentType,
+      fetchLatestBaileysVersion,
+      Browsers,
+    } = await import('@whiskeysockets/baileys');
+
     console.log("STEP 1 - connectToWA started");
 
     const { state, saveCreds } = await useMultiFileAuthState(
@@ -119,6 +155,7 @@ async function connectToWA() {
   const { connection, lastDisconnect } = update;
 
   if (connection === 'close') {
+    isWhatsAppConnected = false;
     const statusCode = lastDisconnect?.error?.output?.statusCode;
 
     if (statusCode === DisconnectReason.loggedOut) {
@@ -144,6 +181,7 @@ async function connectToWA() {
     isConnecting = false;
     setTimeout(() => connectToWA(), delay);
   } else if (connection === 'open') {
+    isWhatsAppConnected = true;
     reconnectAttempts = 0;
     console.log('✅ KyZer-Fea connected to WhatsApp');
 
@@ -307,10 +345,19 @@ process.on('unhandledRejection', (reason) => {
 
 
 
-ensureSessionFile();
-
-app.get("/", (req, res) => {
-  res.send("Hey, KyZer-Fea is Back✅");
+app.get("/", (_req, res) => {
+  res.status(200).send("Hey, KyZer-Fea is Back✅");
 });
 
-app.listen(port, () => console.log(`Server listening on http://localhost:${port}`));
+app.get("/health", (_req, res) => {
+  res.status(200).json({
+    status: "ok",
+    service: "KyZer-Fea",
+    whatsappConnected: isWhatsAppConnected,
+  });
+});
+
+app.listen(port, "0.0.0.0", () => {
+  console.log(`KyZer-Fea health server listening on port ${port}`);
+  ensureSessionFile();
+});
