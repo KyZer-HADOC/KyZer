@@ -9,5 +9,7 @@ auth_info_baileys/
 pair_sessions/
 qr_sessions/
 session/
+temp_pair_*/
+temp/
 *.log
 .DS_Store
