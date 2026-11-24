@@ -1,7 +1,7 @@
 
 const { cmd } = require("../command");
 const { getGroupAdmins } = require("../lib/functions");
-const { downloadMediaMessage } = require('@whiskeysockets/baileys');
+const { downloadMediaBuffer } = require("../lib/msg");
 
 
 function getTargetUser(mek, quoted, args) {
@@ -78,10 +78,10 @@ cmd({
   if (!isGroup) return reply("❌ This command can only be used in groups!");
   if (!isAdmins) return reply("❌ You must be a group admin to use this command!");
 
-  if (!quoted?.message?.imageMessage) return reply("🖼️ Please reply to an image to set as the group profile photo.");
+  if (m.quoted?.type !== "imageMessage") return reply("🖼️ Please reply to an image to set as the group profile photo.");
 
   try {
-    const media = await downloadMediaMessage(quoted, 'buffer');
+    const media = await downloadMediaBuffer(m.quoted.msg, "imageMessage");
     await danuwa.updateProfilePicture(m.chat, media);
     reply("✅ Group profile picture updated!");
   } catch (e) {
