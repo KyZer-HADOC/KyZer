@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: kyzer-fea
+    runtime: node
+    plan: free
+    region: singapore
+    branch: main
+    buildCommand: PUPPETEER_SKIP_DOWNLOAD=true npm install --no-audit --no-fund
+    startCommand: npm start
+    healthCheckPath: /health
+    autoDeployTrigger: checksPass
+    envVars:
+      - key: MEGA_EMAIL
+        sync: false
+      - key: MEGA_PASSWORD
+        sync: false
+      - key: BOT_OWNER
+        value: "94718354800"
+      - key: AUTO_STATUS_SEEN
+        value: "false"
+      - key: AUTO_STATUS_REACT
+        value: "true"
